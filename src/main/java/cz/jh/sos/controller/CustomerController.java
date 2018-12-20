@@ -3,11 +3,12 @@ package cz.jh.sos.controller;
 import cz.jh.sos.model.Customer;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.web.bind.annotation.*;
 
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.List;
 
 @RestController
@@ -41,6 +42,28 @@ public class CustomerController {
                 "SELECT id, name, city, grade FROM customer ORDER BY id LIMIT ?,?",
                 new Object[]{getHowMuchRowsToSkip(pageNo), PAGE_SIZE},
                 new BeanPropertyRowMapper<>(Customer.class));
+    }
+
+    @PostMapping("/customer")
+    public Customer createCustomer(@RequestBody Customer customer) {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbcTemplate.update(connection -> {
+            PreparedStatement preparedStatement = connection.prepareStatement(
+                "INSERT INTO customer (name, city, grade) VALUES (?, ?, ?)",
+                    Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setString(1, customer.getName());
+            preparedStatement.setString(2, customer.getCity());
+            preparedStatement.setInt(3, customer.getGrade());
+
+            return preparedStatement;
+        }, keyHolder);
+
+        long newCustomerId = keyHolder.getKey().longValue();
+
+        // TODO retrieve inserted customer from DB!
+        customer.setId(newCustomerId);
+        return customer;
     }
 
     private int getHowMuchRowsToSkip(int pageNo) {

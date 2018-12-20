@@ -2,13 +2,13 @@ package cz.jh.sos.model;
 
 public class Customer {
 
-    Long id;
+    private Long id;
 
-    String name;
+    private String name;
 
-    String city;
+    private String city;
 
-    Integer grade;
+    private Integer grade;
 
     public Long getId() {
         return id;
