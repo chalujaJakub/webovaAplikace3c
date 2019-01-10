@@ -1,6 +1,8 @@
 package cz.jh.sos.controller;
 
 import cz.jh.sos.model.Customer;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -47,7 +49,7 @@ public class CustomerController {
     }
 
     @PostMapping("/customer")
-    public Customer createCustomer(@RequestBody Customer customer) {
+    public ResponseEntity<Customer> createCustomer(@RequestBody Customer customer) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
         jdbcTemplate.update(connection -> {
@@ -62,7 +64,24 @@ public class CustomerController {
         }, keyHolder);
 
         long newCustomerId = keyHolder.getKey().longValue();
-        return getCustomer(newCustomerId);
+        return new ResponseEntity<>(getCustomer(newCustomerId),
+                HttpStatus.CREATED);
+    }
+
+    @PutMapping("/customer/{id}")
+    public Customer updateCustomer(@PathVariable Long id,
+                                   @RequestBody Customer customer) {
+         jdbcTemplate.update(
+        "UPDATE customer SET name = ?, city = ?, grade = ? WHERE id = ?",
+            customer.getName(), customer.getCity(), customer.getGrade(), id);
+
+         return getCustomer(id);
+    }
+
+    @DeleteMapping("/customer/{id}")
+    public ResponseEntity deleteCustomer(@PathVariable Long id) {
+         jdbcTemplate.update("DELETE FROM customer WHERE id = ?", id);
+         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
     private int getHowMuchRowsToSkip(int pageNo) {
