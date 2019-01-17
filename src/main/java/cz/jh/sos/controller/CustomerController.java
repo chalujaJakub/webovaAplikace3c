@@ -1,6 +1,7 @@
 package cz.jh.sos.controller;
 
 import cz.jh.sos.model.Customer;
+import cz.jh.sos.model.CustomerInfo;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 
 ;
@@ -26,9 +28,27 @@ public class CustomerController {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    @GetMapping("/test")
-    public String test() {
-        return "Hello world!";
+    @GetMapping("/customer/info")
+    public CustomerInfo getCustomersInfo() {
+        List<Customer> customers = jdbcTemplate.query(
+                "SELECT id, name, city, grade FROM customer",
+                new BeanPropertyRowMapper<>(Customer.class));
+
+        int numberOfCustomers = customers.size();
+        List<String> cities = new ArrayList<>();
+        List<String> names = new ArrayList<>();
+
+        for (Customer customer : customers) {
+            cities.add(customer.getCity());
+            names.add(customer.getName());
+        }
+
+        CustomerInfo customerInfo = new CustomerInfo();
+        customerInfo.setNumberOfCustomers(numberOfCustomers);
+        customerInfo.setCities(cities);
+        customerInfo.setNames(names);
+
+        return customerInfo;
     }
 
     @GetMapping("/customer/{id}")
