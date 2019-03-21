@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.PreparedStatement;
@@ -61,12 +62,18 @@ public class CustomerController {
     }
 
     @GetMapping("/customer")
-    public List<Customer> getCustomers(
+    public ResponseEntity<List<Customer>> getCustomers(
             @RequestParam(required = false, defaultValue = "1") Integer pageNo) {
-        return jdbcTemplate.query(
+        List<Customer> customers = jdbcTemplate.query(
                 "SELECT id, name, city, grade FROM customer ORDER BY id LIMIT ?,?",
                 new Object[]{getHowMuchRowsToSkip(pageNo), PAGE_SIZE},
                 new BeanPropertyRowMapper<>(Customer.class));
+
+        Integer numberOfCustomers = jdbcTemplate.queryForObject("SELECT count(*) FROM customer", Integer.class);
+        LinkedMultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+        headers.add("X-Count", numberOfCustomers + "");
+
+        return new ResponseEntity<>(customers, headers, HttpStatus.OK);
     }
 
     @PostMapping("/customer")
