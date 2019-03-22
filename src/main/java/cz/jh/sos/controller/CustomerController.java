@@ -19,7 +19,6 @@ import java.util.List;
 ;
 
 @RestController
-@CrossOrigin
 public class CustomerController {
 
     static final int PAGE_SIZE = 3;
